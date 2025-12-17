@@ -4,7 +4,7 @@ Tags: sitemap, xml sitemap, seo, google news, robots.txt
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.2
-Stable tag: 1.1.0
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,9 @@ No. This plugin generates and serves the XML sitemap files. You can manually sub
 3. Meta box for excluding individual posts from the sitemap.
 
 == Changelog ==
+
+= 1.1.1 =
+* Add plugin icons.
 
 = 1.1.0 =
 * Added support for per-post exclusion via meta box.
