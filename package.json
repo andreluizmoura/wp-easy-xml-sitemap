@@ -1,0 +1,53 @@
+{
+  "name": "easy-xml-sitemap",
+  "version": "1.1.0",
+  "description": "Lightweight, modular XML sitemap generator for WordPress",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run build:css && npm run build:js",
+    "build:css": "echo 'No CSS build process configured'",
+    "build:js": "echo 'No JS build process configured'",
+    "watch": "npm run watch:css & npm run watch:js",
+    "watch:css": "echo 'No CSS watch process configured'",
+    "watch:js": "echo 'No JS watch process configured'",
+    "lint": "npm run lint:css && npm run lint:js",
+    "lint:css": "echo 'No CSS linting configured'",
+    "lint:js": "eslint inc/**/*.js || echo 'No JavaScript files to lint'",
+    "format": "prettier --write '**/*.{js,json,md}'",
+    "clean": "rm -rf node_modules package-lock.json",
+    "zip": "npm run build && npm run make-zip",
+    "make-zip": "zip -r easy-xml-sitemap.zip . -x '*.git*' '*node_modules*' '*vendor*' '*.DS_Store' '*.zip'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andremoura/easy-xml-sitemap.git"
+  },
+  "keywords": [
+    "wordpress",
+    "plugin",
+    "sitemap",
+    "xml",
+    "seo",
+    "google-news"
+  ],
+  "author": {
+    "name": "André Moura",
+    "email": "contact@andremoura.com",
+    "url": "https://wordpress.andremoura.com"
+  },
+  "license": "GPL-2.0-or-later",
+  "bugs": {
+    "url": "https://github.com/andremoura/easy-xml-sitemap/issues"
+  },
+  "homepage": "https://wordpress.andremoura.com",
+  "devDependencies": {
+    "@wordpress/scripts": "^26.0.0",
+    "eslint": "^8.50.0",
+    "eslint-config-wordpress": "^2.0.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
+}

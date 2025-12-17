@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="2.0" 
+                xmlns:html="http://www.w3.org/1999/xhtml"
+                xmlns:sitemap="http://www.sitemaps.org/schemas/sitemap/0.9"
+                xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:output method="html" version="1.0" encoding="UTF-8" indent="yes"/>
+  <xsl:template match="/">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+        <title>XML Sitemap - Easy XML Sitemap</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style type="text/css">
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            font-size: 14px;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+          }
+          .wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            border-radius: 4px;
+          }
+          .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 4px 4px 0 0;
+          }
+          .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 600;
+          }
+          .header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 16px;
+          }
+          .content {
+            padding: 30px;
+          }
+          .intro {
+            background-color: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+          }
+          .intro h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #667eea;
+          }
+          .intro p {
+            margin: 0;
+            line-height: 1.6;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th {
+            background-color: #667eea;
+            color: white;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px 15px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          tr {
+            border-bottom: 1px solid #e9ecef;
+          }
+          tr:hover {
+            background-color: #f8f9fa;
+          }
+          td {
+            padding: 12px 15px;
+            font-size: 14px;
+          }
+          td.url {
+            max-width: 500px;
+            word-break: break-all;
+          }
+          td a {
+            color: #667eea;
+            text-decoration: none;
+          }
+          td a:hover {
+            text-decoration: underline;
+          }
+          .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+          }
+          .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+          }
+          .stat-box .number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+          }
+          .stat-box .label {
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 13px;
+            border-top: 1px solid #e9ecef;
+          }
+          .footer a {
+            color: #667eea;
+            text-decoration: none;
+          }
+          .footer a:hover {
+            text-decoration: underline;
+          }
+          .priority {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+          }
+          .priority-high { background-color: #d4edda; color: #155724; }
+          .priority-medium { background-color: #fff3cd; color: #856404; }
+          .priority-low { background-color: #f8d7da; color: #721c24; }
+        </style>
+      </head>
+      <body>
+        <div class="wrapper">
+          <div class="header">
+            <h1>
+              <xsl:choose>
+                <xsl:when test="sitemap:sitemapindex">XML Sitemap Index</xsl:when>
+                <xsl:otherwise>XML Sitemap</xsl:otherwise>
+              </xsl:choose>
+            </h1>
+            <p>Generated by Easy XML Sitemap Plugin</p>
+          </div>
+          
+          <div class="content">
+            <xsl:choose>
+              <xsl:when test="sitemap:sitemapindex">
+                <!-- Sitemap Index -->
+                <div class="intro">
+                  <h2>About Sitemap Index</h2>
+                  <p>This is an XML Sitemap Index file. It contains links to all individual sitemaps for this website. Search engines use these sitemaps to discover and index your content.</p>
+                </div>
+                
+                <div class="stats">
+                  <div class="stat-box">
+                    <div class="number"><xsl:value-of select="count(sitemap:sitemapindex/sitemap:sitemap)"/></div>
+                    <div class="label">Total Sitemaps</div>
+                  </div>
+                </div>
+                
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Sitemap URL</th>
+                      <th>Last Modified</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <xsl:for-each select="sitemap:sitemapindex/sitemap:sitemap">
+                      <tr>
+                        <td class="url">
+                          <a href="{sitemap:loc}">
+                            <xsl:value-of select="sitemap:loc"/>
+                          </a>
+                        </td>
+                        <td>
+                          <xsl:value-of select="concat(substring(sitemap:lastmod,0,11),concat(' ', substring(sitemap:lastmod,12,5)))"/>
+                        </td>
+                      </tr>
+                    </xsl:for-each>
+                  </tbody>
+                </table>
+              </xsl:when>
+              
+              <xsl:otherwise>
+                <!-- Regular Sitemap or News Sitemap -->
+                <div class="intro">
+                  <h2>About This Sitemap</h2>
+                  <p>This XML Sitemap contains URLs for this website. Search engines like Google use sitemaps to discover and crawl pages more efficiently.</p>
+                </div>
+                
+                <div class="stats">
+                  <div class="stat-box">
+                    <div class="number"><xsl:value-of select="count(sitemap:urlset/sitemap:url)"/></div>
+                    <div class="label">Total URLs</div>
+                  </div>
+                </div>
+                
+                <table>
+                  <thead>
+                    <tr>
+                      <th>URL</th>
+                      <xsl:if test="sitemap:urlset/sitemap:url/sitemap:lastmod">
+                        <th>Last Modified</th>
+                      </xsl:if>
+                      <xsl:if test="sitemap:urlset/sitemap:url/sitemap:priority">
+                        <th>Priority</th>
+                      </xsl:if>
+                      <xsl:if test="sitemap:urlset/sitemap:url/news:news">
+                        <th>News Info</th>
+                      </xsl:if>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <xsl:for-each select="sitemap:urlset/sitemap:url">
+                      <tr>
+                        <td class="url">
+                          <a href="{sitemap:loc}">
+                            <xsl:value-of select="sitemap:loc"/>
+                          </a>
+                        </td>
+                        <xsl:if test="sitemap:lastmod">
+                          <td>
+                            <xsl:value-of select="concat(substring(sitemap:lastmod,0,11),concat(' ', substring(sitemap:lastmod,12,5)))"/>
+                          </td>
+                        </xsl:if>
+                        <xsl:if test="sitemap:priority">
+                          <td>
+                            <xsl:choose>
+                              <xsl:when test="sitemap:priority &gt;= 0.7">
+                                <span class="priority priority-high">
+                                  <xsl:value-of select="sitemap:priority"/>
+                                </span>
+                              </xsl:when>
+                              <xsl:when test="sitemap:priority &gt;= 0.4">
+                                <span class="priority priority-medium">
+                                  <xsl:value-of select="sitemap:priority"/>
+                                </span>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                <span class="priority priority-low">
+                                  <xsl:value-of select="sitemap:priority"/>
+                                </span>
+                              </xsl:otherwise>
+                            </xsl:choose>
+                          </td>
+                        </xsl:if>
+                        <xsl:if test="news:news">
+                          <td>
+                            <strong><xsl:value-of select="news:news/news:title"/></strong><br/>
+                            <xsl:value-of select="news:news/news:publication_date"/>
+                          </td>
+                        </xsl:if>
+                      </tr>
+                    </xsl:for-each>
+                  </tbody>
+                </table>
+              </xsl:otherwise>
+            </xsl:choose>
+          </div>
+          
+          <div class="footer">
+            <p>Generated by <a href="http://wordpress.andremoura.com" target="_blank">Easy XML Sitemap</a> for WordPress</p>
+            <p>Learn more about <a href="https://www.sitemaps.org/" target="_blank">XML Sitemaps</a></p>
+          </div>
+        </div>
+      </body>
+    </html>
+  </xsl:template>
+</xsl:stylesheet>
