@@ -95,7 +95,7 @@ No. This plugin generates and serves the XML sitemap files. You can manually sub
 
 == Changelog ==
 
-= 1.1.1 =
+= 1.1.3 =
 * Add plugin icons.
 
 = 1.1.0 =
