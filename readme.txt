@@ -95,6 +95,9 @@ No. This plugin generates and serves the XML sitemap files. You can manually sub
 
 == Changelog ==
 
+= 1.1.1 =
+* Add plugin icons.
+
 = 1.1.0 =
 * Added support for per-post exclusion via meta box.
 * Introduced caching layer for sitemap queries to improve performance.
