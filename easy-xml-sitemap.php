@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Easy XML Sitemap
  * Description: Lightweight, modular XML sitemap generator for posts, pages, taxonomies, and Google News.
- * Version: 1.1.1
+ * Version: 1.1.2
  * Author: André Moura
  * Author URI: https://www.andremoura.com
  * Plugin URI:  https://wordpress.andremoura.com
