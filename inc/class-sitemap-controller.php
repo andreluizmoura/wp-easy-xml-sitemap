@@ -34,7 +34,18 @@ class Sitemap_Controller {
      *
      * @var array
      */
-    private $valid_types = array( 'posts', 'pages', 'tags', 'categories', 'general', 'news', 'sitemap-index' );
+    private $valid_types = array( 
+        'posts',
+        'posts-index',
+        'posts-date',
+        'posts-category',
+        'pages', 
+        'tags', 
+        'categories', 
+        'general', 
+        'news', 
+        'sitemap-index' 
+    );
 
     /**
      * Get singleton instance
@@ -60,10 +71,38 @@ class Sitemap_Controller {
     /**
      * Register rewrite rules for sitemap URLs
      */
-    public static function register_rewrite_rules() {
+    public function register_rewrite_rules() {
         $slug = self::SITEMAP_SLUG;
         
-        // Pattern: /easy-sitemap/posts.xml or /easy-sitemap/sitemap-index.xml
+        // Main sitemap: /easy-sitemap/sitemap.xml
+        add_rewrite_rule(
+            '^' . $slug . '/sitemap\.xml$',
+            'index.php?easy_sitemap_type=sitemap-index',
+            'top'
+        );
+        
+        // Posts index: /easy-sitemap/posts-index.xml
+        add_rewrite_rule(
+            '^' . $slug . '/posts-index\.xml$',
+            'index.php?easy_sitemap_type=posts-index',
+            'top'
+        );
+        
+        // Posts by date: /easy-sitemap/posts-2024-12.xml
+        add_rewrite_rule(
+            '^' . $slug . '/posts-([0-9]{4})-([0-9]{2})\.xml$',
+            'index.php?easy_sitemap_type=posts-date&easy_sitemap_year=$matches[1]&easy_sitemap_month=$matches[2]',
+            'top'
+        );
+        
+        // Posts by category: /easy-sitemap/posts-category-slug.xml
+        add_rewrite_rule(
+            '^' . $slug . '/posts-category-([a-z0-9-]+)\.xml$',
+            'index.php?easy_sitemap_type=posts-category&easy_sitemap_cat=$matches[1]',
+            'top'
+        );
+        
+        // Other sitemaps: /easy-sitemap/{type}.xml
         add_rewrite_rule(
             '^' . $slug . '/([a-z-]+)\.xml$',
             'index.php?easy_sitemap_type=$matches[1]',
@@ -79,6 +118,9 @@ class Sitemap_Controller {
      */
     public function add_query_vars( $vars ) {
         $vars[] = 'easy_sitemap_type';
+        $vars[] = 'easy_sitemap_year';
+        $vars[] = 'easy_sitemap_month';
+        $vars[] = 'easy_sitemap_cat';
         return $vars;
     }
 
@@ -99,18 +141,31 @@ class Sitemap_Controller {
             return;
         }
         
-        // Check if this sitemap is enabled (except for sitemap-index which is always available if enabled)
-        if ( 'sitemap-index' !== $sitemap_type && ! $this->is_sitemap_enabled( $sitemap_type ) ) {
-            $this->send_404();
-            return;
+        // Special handling for posts-date
+        if ( 'posts-date' === $sitemap_type ) {
+            $year = get_query_var( 'easy_sitemap_year', false );
+            $month = get_query_var( 'easy_sitemap_month', false );
+            
+            if ( ! $year || ! $month ) {
+                $this->send_404();
+                return;
+            }
         }
         
-        // Check if sitemap index is enabled
-        if ( 'sitemap-index' === $sitemap_type ) {
-            $settings = get_option( 'easy_xml_sitemap_settings', array() );
-            $index_enabled = isset( $settings['enable_index'] ) ? $settings['enable_index'] : true;
+        // Special handling for posts-category
+        if ( 'posts-category' === $sitemap_type ) {
+            $cat_slug = get_query_var( 'easy_sitemap_cat', false );
             
-            if ( ! $index_enabled ) {
+            if ( ! $cat_slug ) {
+                $this->send_404();
+                return;
+            }
+        }
+        
+        // Check if sitemap is enabled (except for index and dynamic types)
+        $always_available = array( 'sitemap-index', 'posts-index', 'posts-date', 'posts-category' );
+        if ( ! in_array( $sitemap_type, $always_available, true ) ) {
+            if ( ! $this->is_sitemap_enabled( $sitemap_type ) ) {
                 $this->send_404();
                 return;
             }
@@ -126,8 +181,21 @@ class Sitemap_Controller {
      * @param string $sitemap_type Type of sitemap to serve
      */
     private function serve_sitemap( $sitemap_type ) {
+        // Build cache key
+        $cache_key = $sitemap_type;
+        
+        // Add dynamic parameters to cache key
+        if ( 'posts-date' === $sitemap_type ) {
+            $year = get_query_var( 'easy_sitemap_year' );
+            $month = get_query_var( 'easy_sitemap_month' );
+            $cache_key .= '-' . $year . '-' . $month;
+        } elseif ( 'posts-category' === $sitemap_type ) {
+            $cat_slug = get_query_var( 'easy_sitemap_cat' );
+            $cache_key .= '-' . $cat_slug;
+        }
+        
         // Try to get from cache
-        $xml = Cache::get( $sitemap_type );
+        $xml = Cache::get( $cache_key );
         
         // If not cached, generate fresh
         if ( false === $xml ) {
@@ -135,7 +203,7 @@ class Sitemap_Controller {
             
             // Store in cache
             if ( ! empty( $xml ) ) {
-                Cache::set( $sitemap_type, $xml );
+                Cache::set( $cache_key, $xml );
             }
         }
         
@@ -157,7 +225,20 @@ class Sitemap_Controller {
                 return XML_Renderer::generate_sitemap_index();
                 
             case 'posts':
-                return XML_Renderer::generate_posts_sitemap();
+                // Legacy: redirect to posts-index logic
+                return XML_Renderer::generate_posts_index();
+                
+            case 'posts-index':
+                return XML_Renderer::generate_posts_index();
+                
+            case 'posts-date':
+                $year = get_query_var( 'easy_sitemap_year' );
+                $month = get_query_var( 'easy_sitemap_month' );
+                return XML_Renderer::generate_posts_by_date( $year, $month );
+                
+            case 'posts-category':
+                $cat_slug = get_query_var( 'easy_sitemap_cat' );
+                return XML_Renderer::generate_posts_by_category( $cat_slug );
                 
             case 'pages':
                 return XML_Renderer::generate_pages_sitemap();
@@ -197,13 +278,12 @@ class Sitemap_Controller {
      * Send XML headers
      */
     private function send_xml_headers() {
-        // Prevent caching by some plugins/servers
         if ( ! headers_sent() ) {
             status_header( 200 );
             header( 'Content-Type: application/xml; charset=UTF-8' );
             header( 'X-Robots-Tag: noindex, follow', true );
             
-            // Optional: Add cache control headers
+            // Cache control headers
             $cache_duration = $this->get_cache_duration();
             header( 'Cache-Control: max-age=' . $cache_duration );
             header( 'Expires: ' . gmdate( 'D, d M Y H:i:s', time() + $cache_duration ) . ' GMT' );
@@ -235,7 +315,7 @@ class Sitemap_Controller {
     /**
      * Get sitemap URL for a specific type
      *
-     * @param string $type Sitemap type (posts, pages, sitemap-index, etc.)
+     * @param string $type Sitemap type
      * @return string Full URL to the sitemap
      */
     public static function get_sitemap_url( $type ) {
@@ -252,21 +332,21 @@ class Sitemap_Controller {
         $settings   = get_option( 'easy_xml_sitemap_settings', array() );
         $urls       = array();
         
-        // Add sitemap index first if enabled
-        $index_enabled = isset( $settings['enable_index'] ) ? $settings['enable_index'] : true;
-        if ( $index_enabled ) {
-            $urls['sitemap-index'] = self::get_sitemap_url( 'sitemap-index' );
-        }
+        // Add sitemap index first
+        $urls['sitemap-index'] = self::get_sitemap_url( 'sitemap-index' );
         
         // Add other sitemaps
-        foreach ( $controller->valid_types as $type ) {
-            // Skip sitemap-index as we already added it
-            if ( 'sitemap-index' === $type ) {
-                continue;
-            }
-            
-            $key = 'enable_' . $type;
-            if ( isset( $settings[ $key ] ) && $settings[ $key ] ) {
+        $sitemap_map = array(
+            'posts-index'  => 'enable_posts',
+            'pages'        => 'enable_pages',
+            'tags'         => 'enable_tags',
+            'categories'   => 'enable_categories',
+            'general'      => 'enable_general',
+            'news'         => 'enable_news',
+        );
+        
+        foreach ( $sitemap_map as $type => $setting_key ) {
+            if ( isset( $settings[ $setting_key ] ) && $settings[ $setting_key ] ) {
                 $urls[ $type ] = self::get_sitemap_url( $type );
             }
         }
@@ -276,40 +356,15 @@ class Sitemap_Controller {
 
     /**
      * Regenerate all sitemaps (clear cache)
-     * Used by admin settings page
      *
      * @return bool True on success
      */
     public static function regenerate_all_sitemaps() {
-        // Check capability
         if ( ! current_user_can( 'manage_options' ) ) {
             return false;
         }
         
         Cache::clear_all();
-        
-        return true;
-    }
-
-    /**
-     * Regenerate a specific sitemap (clear its cache)
-     *
-     * @param string $sitemap_type Type of sitemap
-     * @return bool True on success
-     */
-    public static function regenerate_sitemap( $sitemap_type ) {
-        // Check capability
-        if ( ! current_user_can( 'manage_options' ) ) {
-            return false;
-        }
-        
-        $controller = self::get_instance();
-        
-        if ( ! in_array( $sitemap_type, $controller->valid_types, true ) ) {
-            return false;
-        }
-        
-        Cache::clear( $sitemap_type );
         
         return true;
     }

@@ -64,11 +64,50 @@ class Cache {
      * @return void
      */
     public static function clear_all() {
-        $sitemap_types = array( 'posts', 'pages', 'tags', 'categories', 'general', 'news', 'sitemap-index' );
+        $sitemap_types = array( 
+            'posts', 
+            'posts-index',
+            'pages', 
+            'tags', 
+            'categories', 
+            'general', 
+            'news', 
+            'sitemap-index' 
+        );
         
         foreach ( $sitemap_types as $type ) {
             self::clear( $type );
         }
+        
+        // Clear dynamic caches (posts-date-*, posts-category-*)
+        global $wpdb;
+        
+        $pattern_date = $wpdb->esc_like( '_transient_' . self::CACHE_PREFIX . 'posts-date-' ) . '%';
+        $pattern_cat = $wpdb->esc_like( '_transient_' . self::CACHE_PREFIX . 'posts-category-' ) . '%';
+        
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} 
+                WHERE option_name LIKE %s 
+                OR option_name LIKE %s",
+                $pattern_date,
+                $pattern_cat
+            )
+        );
+        
+        // Clear timeout transients too
+        $pattern_date_timeout = $wpdb->esc_like( '_transient_timeout_' . self::CACHE_PREFIX . 'posts-date-' ) . '%';
+        $pattern_cat_timeout = $wpdb->esc_like( '_transient_timeout_' . self::CACHE_PREFIX . 'posts-category-' ) . '%';
+        
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} 
+                WHERE option_name LIKE %s 
+                OR option_name LIKE %s",
+                $pattern_date_timeout,
+                $pattern_cat_timeout
+            )
+        );
     }
 
     /**
@@ -138,9 +177,27 @@ class Cache {
         // Clear relevant caches based on post type
         if ( 'post' === $post_type ) {
             self::clear( 'posts' );
+            self::clear( 'posts-index' );
             self::clear( 'tags' );
             self::clear( 'categories' );
-            self::clear( 'news' ); // Posts may appear in news sitemap
+            self::clear( 'news' );
+            
+            // Clear date-specific cache
+            $post = get_post( $post_id );
+            if ( $post ) {
+                $year = gmdate( 'Y', strtotime( $post->post_date ) );
+                $month = gmdate( 'm', strtotime( $post->post_date ) );
+                self::clear( 'posts-date-' . $year . '-' . $month );
+            }
+            
+            // Clear category-specific caches
+            $categories = get_the_category( $post_id );
+            if ( ! empty( $categories ) ) {
+                foreach ( $categories as $category ) {
+                    self::clear( 'posts-category-' . $category->slug );
+                }
+            }
+            
         } elseif ( 'page' === $post_type ) {
             self::clear( 'pages' );
         }
@@ -160,6 +217,14 @@ class Cache {
     public static function invalidate_on_term_change( $term_id, $tt_id, $taxonomy ) {
         if ( 'category' === $taxonomy ) {
             self::clear( 'categories' );
+            self::clear( 'posts-index' );
+            
+            // Clear category-specific posts cache
+            $term = get_term( $term_id, $taxonomy );
+            if ( $term && ! is_wp_error( $term ) ) {
+                self::clear( 'posts-category-' . $term->slug );
+            }
+            
         } elseif ( 'post_tag' === $taxonomy ) {
             self::clear( 'tags' );
         }

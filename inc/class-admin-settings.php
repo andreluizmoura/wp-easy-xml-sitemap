@@ -71,8 +71,8 @@ class Admin_Settings {
      */
     public function add_settings_page() {
         add_options_page(
-            __( 'Easy XML Sitemap', 'easy-xml-sitemap' ),
-            __( 'Easy XML Sitemap', 'easy-xml-sitemap' ),
+            __( 'Easy Sitemap', 'easy-xml-sitemap' ),
+            __( 'Easy Sitemap', 'easy-xml-sitemap' ),
             'manage_options',
             self::PAGE_SLUG,
             array( $this, 'render_settings_page' )
@@ -91,7 +91,7 @@ class Admin_Settings {
 
         add_settings_section(
             'easy_xml_sitemap_general_section',
-            __( 'General Settings', 'easy-xml-sitemap' ),
+            __( 'Sitemap Configuration', 'easy-xml-sitemap' ),
             array( $this, 'render_general_section' ),
             self::PAGE_SLUG
         );
@@ -105,6 +105,24 @@ class Admin_Settings {
             array(
                 'label_for'   => 'enable_posts',
                 'description' => __( 'Generate sitemap for all published posts', 'easy-xml-sitemap' ),
+            )
+        );
+
+        add_settings_field(
+            'posts_organization',
+            __( 'Posts Organization', 'easy-xml-sitemap' ),
+            array( $this, 'render_radio_field' ),
+            self::PAGE_SLUG,
+            'easy_xml_sitemap_general_section',
+            array(
+                'label_for'   => 'posts_organization',
+                'options'     => array(
+                    'single'   => __( 'Single sitemap (all posts in one file)', 'easy-xml-sitemap' ),
+                    'date'     => __( 'Organize by date (one sitemap per month/year)', 'easy-xml-sitemap' ),
+                    'category' => __( 'Organize by category (one sitemap per category)', 'easy-xml-sitemap' ),
+                ),
+                'default'     => 'single',
+                'description' => __( 'How to organize posts in the sitemap. For large sites, organizing by date or category improves performance.', 'easy-xml-sitemap' ),
             )
         );
 
@@ -145,6 +163,18 @@ class Admin_Settings {
         );
 
         add_settings_field(
+            'enable_general',
+            __( 'General Sitemap', 'easy-xml-sitemap' ),
+            array( $this, 'render_checkbox_field' ),
+            self::PAGE_SLUG,
+            'easy_xml_sitemap_general_section',
+            array(
+                'label_for'   => 'enable_general',
+                'description' => __( 'Generate a comprehensive sitemap with all URLs (homepage, posts, pages, categories, tags)', 'easy-xml-sitemap' ),
+            )
+        );
+
+        add_settings_field(
             'enable_news',
             __( 'Google News Sitemap', 'easy-xml-sitemap' ),
             array( $this, 'render_checkbox_field' ),
@@ -152,7 +182,7 @@ class Admin_Settings {
             'easy_xml_sitemap_general_section',
             array(
                 'label_for'   => 'enable_news',
-                'description' => __( 'Enable Google News compatible sitemap for recent posts', 'easy-xml-sitemap' ),
+                'description' => __( 'Enable Google News compatible sitemap for recent posts (last 2 days)', 'easy-xml-sitemap' ),
             )
         );
 
@@ -164,7 +194,7 @@ class Admin_Settings {
             'easy_xml_sitemap_general_section',
             array(
                 'label_for'   => 'add_to_robots',
-                'description' => __( 'Automatically add sitemap index URL to robots.txt', 'easy-xml-sitemap' ),
+                'description' => __( 'Automatically add sitemap URL to virtual robots.txt', 'easy-xml-sitemap' ),
             )
         );
 
@@ -176,7 +206,7 @@ class Admin_Settings {
             'easy_xml_sitemap_general_section',
             array(
                 'label_for'   => 'cache_duration',
-                'description' => __( 'How long to cache sitemap output (default: 3600 seconds)', 'easy-xml-sitemap' ),
+                'description' => __( 'How long to cache sitemap output (60 seconds to 1 week, default: 3600)', 'easy-xml-sitemap' ),
                 'min'         => 60,
                 'max'         => 604800,
             )
@@ -192,12 +222,14 @@ class Admin_Settings {
     public function sanitize_settings( $input ) {
         $output = array();
 
-        $output['enable_posts']      = isset( $input['enable_posts'] ) ? (bool) $input['enable_posts'] : false;
-        $output['enable_pages']      = isset( $input['enable_pages'] ) ? (bool) $input['enable_pages'] : false;
-        $output['enable_categories'] = isset( $input['enable_categories'] ) ? (bool) $input['enable_categories'] : false;
-        $output['enable_tags']       = isset( $input['enable_tags'] ) ? (bool) $input['enable_tags'] : false;
-        $output['enable_news']       = isset( $input['enable_news'] ) ? (bool) $input['enable_news'] : false;
-        $output['add_to_robots']     = isset( $input['add_to_robots'] ) ? (bool) $input['add_to_robots'] : false;
+        $output['enable_posts']        = isset( $input['enable_posts'] ) ? (bool) $input['enable_posts'] : false;
+        $output['posts_organization']  = isset( $input['posts_organization'] ) ? sanitize_key( $input['posts_organization'] ) : 'single';
+        $output['enable_pages']        = isset( $input['enable_pages'] ) ? (bool) $input['enable_pages'] : false;
+        $output['enable_categories']   = isset( $input['enable_categories'] ) ? (bool) $input['enable_categories'] : false;
+        $output['enable_tags']         = isset( $input['enable_tags'] ) ? (bool) $input['enable_tags'] : false;
+        $output['enable_general']      = isset( $input['enable_general'] ) ? (bool) $input['enable_general'] : false;
+        $output['enable_news']         = isset( $input['enable_news'] ) ? (bool) $input['enable_news'] : false;
+        $output['add_to_robots']       = isset( $input['add_to_robots'] ) ? (bool) $input['add_to_robots'] : false;
 
         $output['cache_duration'] = isset( $input['cache_duration'] ) ? absint( $input['cache_duration'] ) : 3600;
 
@@ -207,6 +239,11 @@ class Admin_Settings {
 
         if ( $output['cache_duration'] > 604800 ) {
             $output['cache_duration'] = 604800;
+        }
+        
+        // Validate posts_organization
+        if ( ! in_array( $output['posts_organization'], array( 'single', 'date', 'category' ), true ) ) {
+            $output['posts_organization'] = 'single';
         }
 
         return $output;
@@ -223,8 +260,8 @@ class Admin_Settings {
         $options = get_option( self::OPTION_NAME, array() );
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e( 'Easy XML Sitemap', 'easy-xml-sitemap' ); ?></h1>
-            <p><?php esc_html_e( 'Configure the XML sitemap settings for your site.', 'easy-xml-sitemap' ); ?></p>
+            <h1><?php esc_html_e( 'Easy XML Sitemap Settings', 'easy-xml-sitemap' ); ?></h1>
+            <p><?php esc_html_e( 'Configure XML sitemap generation for your WordPress site.', 'easy-xml-sitemap' ); ?></p>
 
             <form method="post" action="options.php">
                 <?php
@@ -236,73 +273,144 @@ class Admin_Settings {
 
             <hr />
 
-            <h2><?php esc_html_e( 'Sitemap Tools', 'easy-xml-sitemap' ); ?></h2>
-            <p><?php esc_html_e( 'Use the tools below to manually regenerate XML sitemaps.', 'easy-xml-sitemap' ); ?></p>
+            <h2><?php esc_html_e( 'robots.txt Configuration', 'easy-xml-sitemap' ); ?></h2>
+            
+            <?php
+            // Check if physical robots.txt exists
+            $robots_file = ABSPATH . 'robots.txt';
+            if ( file_exists( $robots_file ) ) :
+            ?>
+                <div class="notice notice-warning inline">
+                    <p>
+                        <strong><?php esc_html_e( '⚠️ Physical robots.txt detected', 'easy-xml-sitemap' ); ?></strong><br />
+                        <?php esc_html_e( 'A physical robots.txt file exists in your site root. The "Add to robots.txt" option will not work automatically.', 'easy-xml-sitemap' ); ?>
+                    </p>
+                    <p>
+                        <?php esc_html_e( 'To use automatic robots.txt integration, please delete or rename the physical robots.txt file.', 'easy-xml-sitemap' ); ?><br />
+                        <?php esc_html_e( 'Alternatively, manually add this line to your robots.txt:', 'easy-xml-sitemap' ); ?>
+                    </p>
+                    <p>
+                        <code>Sitemap: <?php echo esc_html( home_url( '/easy-sitemap/sitemap.xml' ) ); ?></code>
+                    </p>
+                </div>
+            <?php else : ?>
+                <div class="notice notice-success inline">
+                    <p>
+                        <strong><?php esc_html_e( '✓ No physical robots.txt found', 'easy-xml-sitemap' ); ?></strong><br />
+                        <?php esc_html_e( 'Virtual robots.txt integration will work correctly if enabled above.', 'easy-xml-sitemap' ); ?>
+                    </p>
+                    <p>
+                        <a href="<?php echo esc_url( home_url( '/robots.txt' ) ); ?>" target="_blank" rel="noopener noreferrer">
+                            <?php esc_html_e( 'View your robots.txt', 'easy-xml-sitemap' ); ?>
+                        </a>
+                    </p>
+                </div>
+            <?php endif; ?>
+
+            <hr />
+
+            <h2><?php esc_html_e( 'Cache Management', 'easy-xml-sitemap' ); ?></h2>
+            <p><?php esc_html_e( 'Manually regenerate all sitemap files to clear the cache and rebuild from current content.', 'easy-xml-sitemap' ); ?></p>
 
             <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                 <?php wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD ); ?>
                 <input type="hidden" name="action" value="easy_xml_sitemap_regenerate" />
-                <?php submit_button( __( 'Regenerate Sitemaps', 'easy-xml-sitemap' ), 'secondary' ); ?>
+                <?php submit_button( __( 'Regenerate All Sitemaps', 'easy-xml-sitemap' ), 'secondary' ); ?>
             </form>
 
+            <hr />
+
             <h2><?php esc_html_e( 'Sitemap URLs', 'easy-xml-sitemap' ); ?></h2>
-            <p><?php esc_html_e( 'Below are the main sitemap URLs generated by this plugin.', 'easy-xml-sitemap' ); ?></p>
+            <p><?php esc_html_e( 'These are the sitemap URLs generated by this plugin. Submit the main sitemap to search engines.', 'easy-xml-sitemap' ); ?></p>
 
             <?php
             $sitemap_types = array(
-                'sitemap-index' => __( 'Sitemap Index', 'easy-xml-sitemap' ),
-                'posts'         => __( 'Posts Sitemap', 'easy-xml-sitemap' ),
-                'pages'         => __( 'Pages Sitemap', 'easy-xml-sitemap' ),
-                'categories'    => __( 'Categories Sitemap', 'easy-xml-sitemap' ),
-                'tags'          => __( 'Tags Sitemap', 'easy-xml-sitemap' ),
-                'news'          => __( 'Google News Sitemap', 'easy-xml-sitemap' ),
+                'sitemap-index' => array(
+                    'label'   => __( 'Main Sitemap (submit this to search engines)', 'easy-xml-sitemap' ),
+                    'enabled' => true,
+                ),
+                'posts-index'   => array(
+                    'label'   => __( 'Posts Sitemap', 'easy-xml-sitemap' ),
+                    'enabled' => ! empty( $options['enable_posts'] ),
+                ),
+                'pages'         => array(
+                    'label'   => __( 'Pages Sitemap', 'easy-xml-sitemap' ),
+                    'enabled' => ! empty( $options['enable_pages'] ),
+                ),
+                'categories'    => array(
+                    'label'   => __( 'Categories Sitemap', 'easy-xml-sitemap' ),
+                    'enabled' => ! empty( $options['enable_categories'] ),
+                ),
+                'tags'          => array(
+                    'label'   => __( 'Tags Sitemap', 'easy-xml-sitemap' ),
+                    'enabled' => ! empty( $options['enable_tags'] ),
+                ),
+                'general'       => array(
+                    'label'   => __( 'General Sitemap', 'easy-xml-sitemap' ),
+                    'enabled' => ! empty( $options['enable_general'] ),
+                ),
+                'news'          => array(
+                    'label'   => __( 'Google News Sitemap', 'easy-xml-sitemap' ),
+                    'enabled' => ! empty( $options['enable_news'] ),
+                ),
             );
             ?>
 
             <table class="widefat striped">
                 <thead>
                     <tr>
-                        <th><?php esc_html_e( 'Sitemap Type', 'easy-xml-sitemap' ); ?></th>
+                        <th style="width: 40%;"><?php esc_html_e( 'Sitemap Type', 'easy-xml-sitemap' ); ?></th>
                         <th><?php esc_html_e( 'URL', 'easy-xml-sitemap' ); ?></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ( $sitemap_types as $type => $label ) : ?>
+                    <?php foreach ( $sitemap_types as $type => $data ) : ?>
                         <?php
-                        $enabled = true;
-                        if ( 'sitemap-index' !== $type ) {
-                            if ( 'news' === $type ) {
-                                $enabled = ! empty( $options['enable_news'] );
-                            } elseif ( 'posts' === $type ) {
-                                $enabled = ! empty( $options['enable_posts'] );
-                            } elseif ( 'pages' === $type ) {
-                                $enabled = ! empty( $options['enable_pages'] );
-                            } elseif ( 'categories' === $type ) {
-                                $enabled = ! empty( $options['enable_categories'] );
-                            } elseif ( 'tags' === $type ) {
-                                $enabled = ! empty( $options['enable_tags'] );
-                            }
-                        }
-
                         $url = Sitemap_Controller::get_sitemap_url( $type );
-
-                        $highlight_style = ( 'sitemap-index' === $type ) ? 'background-color: #f0f6fc;' : '';
+                        $highlight_style = ( 'sitemap-index' === $type ) ? 'background-color: #f0f6fc; font-weight: 600;' : '';
                         ?>
                         <tr<?php if ( $highlight_style ) : ?> style="<?php echo esc_attr( $highlight_style ); ?>"<?php endif; ?>>
-                            <td><strong><?php echo esc_html( $label ); ?></strong></td>
                             <td>
-                                <?php if ( $enabled ) : ?>
+                                <?php echo esc_html( $data['label'] ); ?>
+                                <?php if ( 'sitemap-index' === $type ) : ?>
+                                    <br /><small style="color: #2271b1;"><?php esc_html_e( '← Submit this URL to Google Search Console and Bing Webmaster Tools', 'easy-xml-sitemap' ); ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if ( $data['enabled'] ) : ?>
                                     <a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer">
                                         <?php echo esc_html( $url ); ?>
                                     </a>
                                 <?php else : ?>
-                                    <em><?php esc_html_e( 'Disabled', 'easy-xml-sitemap' ); ?></em>
+                                    <span style="color: #999;">
+                                        <?php esc_html_e( 'Disabled', 'easy-xml-sitemap' ); ?>
+                                        <small>(<?php echo esc_html( $url ); ?>)</small>
+                                    </span>
                                 <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <hr />
+
+            <h2><?php esc_html_e( 'Search Engine Submission', 'easy-xml-sitemap' ); ?></h2>
+            <p><?php esc_html_e( 'Submit your main sitemap to search engines for better crawling and indexing:', 'easy-xml-sitemap' ); ?></p>
+            <ul style="list-style: disc; margin-left: 20px;">
+                <li>
+                    <strong>Google Search Console:</strong> 
+                    <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer">
+                        <?php esc_html_e( 'Submit Sitemap', 'easy-xml-sitemap' ); ?>
+                    </a>
+                </li>
+                <li>
+                    <strong>Bing Webmaster Tools:</strong> 
+                    <a href="https://www.bing.com/webmasters" target="_blank" rel="noopener noreferrer">
+                        <?php esc_html_e( 'Submit Sitemap', 'easy-xml-sitemap' ); ?>
+                    </a>
+                </li>
+            </ul>
         </div>
         <?php
     }
@@ -312,7 +420,7 @@ class Admin_Settings {
      */
     public function render_general_section() {
         ?>
-        <p><?php esc_html_e( 'Configure which content types should be included in XML sitemaps and how caching should behave.', 'easy-xml-sitemap' ); ?></p>
+        <p><?php esc_html_e( 'Enable or disable different sitemap types and configure caching behavior.', 'easy-xml-sitemap' ); ?></p>
         <?php
     }
 
@@ -336,6 +444,39 @@ class Admin_Settings {
     }
 
     /**
+     * Render radio field.
+     *
+     * @param array $args Field arguments.
+     */
+    public function render_radio_field( $args ) {
+        $options = get_option( self::OPTION_NAME, array() );
+        $id      = isset( $args['label_for'] ) ? $args['label_for'] : '';
+        $choices = isset( $args['options'] ) ? $args['options'] : array();
+        $default = isset( $args['default'] ) ? $args['default'] : '';
+        $value   = isset( $options[ $id ] ) ? $options[ $id ] : $default;
+        
+        foreach ( $choices as $choice_value => $choice_label ) {
+            ?>
+            <label style="display: block; margin-bottom: 8px;">
+                <input 
+                    type="radio" 
+                    name="<?php echo esc_attr( self::OPTION_NAME . '[' . $id . ']' ); ?>" 
+                    value="<?php echo esc_attr( $choice_value ); ?>" 
+                    <?php checked( $value, $choice_value ); ?> 
+                />
+                <?php echo esc_html( $choice_label ); ?>
+            </label>
+            <?php
+        }
+        
+        if ( ! empty( $args['description'] ) ) {
+            ?>
+            <p class="description"><?php echo esc_html( $args['description'] ); ?></p>
+            <?php
+        }
+    }
+
+    /**
      * Render number field.
      *
      * @param array $args Field arguments.
@@ -353,6 +494,7 @@ class Admin_Settings {
             value="<?php echo esc_attr( $value ); ?>"
             min="<?php echo esc_attr( $min ); ?>"
             max="<?php echo esc_attr( $max ); ?>"
+            style="width: 150px;"
         />
         <?php if ( ! empty( $args['description'] ) ) : ?>
             <p class="description"><?php echo esc_html( $args['description'] ); ?></p>
@@ -399,7 +541,7 @@ class Admin_Settings {
         if ( isset( $_GET['regenerated'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['regenerated'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
             ?>
             <div class="notice notice-success is-dismissible">
-                <p><?php esc_html_e( 'All sitemaps have been regenerated successfully.', 'easy-xml-sitemap' ); ?></p>
+                <p><?php esc_html_e( '✓ All sitemaps have been regenerated successfully.', 'easy-xml-sitemap' ); ?></p>
             </div>
             <?php
         }

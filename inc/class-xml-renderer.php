@@ -25,7 +25,7 @@ class XML_Renderer {
      */
     public static function get_xml_header( $type = 'standard' ) {
         $xsl_url = plugins_url( 'sitemap.xsl', EASY_XML_SITEMAP_FILE );
-        $generator_url = 'http://wordpress.andremoura.com';
+        $generator_url = 'https://wordpress.andremoura.com';
         $version = EASY_XML_SITEMAP_VERSION;
         $generated_on = current_time( 'mysql' );
         
@@ -113,8 +113,8 @@ class XML_Renderer {
     /**
      * Render a Google News URL entry
      *
-     * @param string $url              The URL
-     * @param array  $news_data        News-specific data
+     * @param string $url       The URL
+     * @param array  $news_data News-specific data
      * @return string XML for single news URL entry
      */
     public static function render_news_url( $url, $news_data ) {
@@ -171,12 +171,12 @@ class XML_Renderer {
         
         // Add enabled sitemaps to index
         $sitemap_types = array(
-            'posts'      => 'enable_posts',
-            'pages'      => 'enable_pages',
-            'tags'       => 'enable_tags',
-            'categories' => 'enable_categories',
-            'general'    => 'enable_general',
-            'news'       => 'enable_news',
+            'posts-index' => 'enable_posts',
+            'pages'       => 'enable_pages',
+            'tags'        => 'enable_tags',
+            'categories'  => 'enable_categories',
+            'general'     => 'enable_general',
+            'news'        => 'enable_news',
         );
         
         foreach ( $sitemap_types as $type => $setting_key ) {
@@ -194,7 +194,66 @@ class XML_Renderer {
     }
 
     /**
-     * Generate posts sitemap
+     * Generate posts sitemap index (organized by date or category)
+     *
+     * @return string Complete XML sitemap for posts
+     */
+    public static function generate_posts_index() {
+        $settings = get_option( 'easy_xml_sitemap_settings', array() );
+        $organization = isset( $settings['posts_organization'] ) ? $settings['posts_organization'] : 'single';
+        
+        // If single organization, return simple sitemap
+        if ( 'single' === $organization ) {
+            return self::generate_posts_sitemap();
+        }
+        
+        // Otherwise, generate an index
+        $xml = self::get_xml_header( 'index' );
+        
+        if ( 'date' === $organization ) {
+            // Get all months/years with posts
+            global $wpdb;
+            
+            $dates = $wpdb->get_results(
+                "SELECT DISTINCT YEAR(post_date) as year, MONTH(post_date) as month, MAX(post_modified) as lastmod
+                FROM {$wpdb->posts}
+                WHERE post_type = 'post'
+                AND post_status = 'publish'
+                GROUP BY YEAR(post_date), MONTH(post_date)
+                ORDER BY year DESC, month DESC"
+            );
+            
+            foreach ( $dates as $date ) {
+                $year = str_pad( $date->year, 4, '0', STR_PAD_LEFT );
+                $month = str_pad( $date->month, 2, '0', STR_PAD_LEFT );
+                
+                $url = home_url( '/easy-sitemap/posts-' . $year . '-' . $month . '.xml' );
+                $lastmod = self::format_lastmod( $date->lastmod );
+                
+                $xml .= self::render_sitemap_entry( $url, $lastmod );
+            }
+            
+        } elseif ( 'category' === $organization ) {
+            // Get all categories with posts
+            $categories = get_categories( array(
+                'hide_empty' => true,
+            ) );
+            
+            foreach ( $categories as $category ) {
+                $url = home_url( '/easy-sitemap/posts-category-' . $category->slug . '.xml' );
+                $lastmod = gmdate( 'c' );
+                
+                $xml .= self::render_sitemap_entry( $url, $lastmod );
+            }
+        }
+        
+        $xml .= self::get_xml_footer( 'index' );
+        
+        return $xml;
+    }
+
+    /**
+     * Generate posts sitemap (single file, all posts)
      *
      * @return string Complete XML sitemap for posts
      */
@@ -207,6 +266,109 @@ class XML_Renderer {
             'posts_per_page' => -1,
             'orderby'        => 'modified',
             'order'          => 'DESC',
+            'meta_query'     => array(
+                'relation' => 'OR',
+                array(
+                    'key'     => '_easy_xml_sitemap_exclude',
+                    'compare' => 'NOT EXISTS',
+                ),
+                array(
+                    'key'     => '_easy_xml_sitemap_exclude',
+                    'value'   => '1',
+                    'compare' => '!=',
+                ),
+            ),
+        );
+        
+        $posts = get_posts( $args );
+        
+        foreach ( $posts as $post ) {
+            $url      = get_permalink( $post->ID );
+            $lastmod  = self::format_lastmod( $post->post_modified_gmt );
+            $priority = '0.6';
+            
+            $xml .= self::render_url( $url, $lastmod, $priority );
+        }
+        
+        $xml .= self::get_xml_footer();
+        
+        return $xml;
+    }
+
+    /**
+     * Generate posts sitemap for a specific month/year
+     *
+     * @param string $year  Year (YYYY)
+     * @param string $month Month (MM)
+     * @return string Complete XML sitemap for posts in that date
+     */
+    public static function generate_posts_by_date( $year, $month ) {
+        $xml = self::get_xml_header();
+        
+        $args = array(
+            'post_type'      => 'post',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'orderby'        => 'modified',
+            'order'          => 'DESC',
+            'date_query'     => array(
+                array(
+                    'year'  => intval( $year ),
+                    'month' => intval( $month ),
+                ),
+            ),
+            'meta_query'     => array(
+                'relation' => 'OR',
+                array(
+                    'key'     => '_easy_xml_sitemap_exclude',
+                    'compare' => 'NOT EXISTS',
+                ),
+                array(
+                    'key'     => '_easy_xml_sitemap_exclude',
+                    'value'   => '1',
+                    'compare' => '!=',
+                ),
+            ),
+        );
+        
+        $posts = get_posts( $args );
+        
+        foreach ( $posts as $post ) {
+            $url      = get_permalink( $post->ID );
+            $lastmod  = self::format_lastmod( $post->post_modified_gmt );
+            $priority = '0.6';
+            
+            $xml .= self::render_url( $url, $lastmod, $priority );
+        }
+        
+        $xml .= self::get_xml_footer();
+        
+        return $xml;
+    }
+
+    /**
+     * Generate posts sitemap for a specific category
+     *
+     * @param string $cat_slug Category slug
+     * @return string Complete XML sitemap for posts in that category
+     */
+    public static function generate_posts_by_category( $cat_slug ) {
+        $xml = self::get_xml_header();
+        
+        // Get category by slug
+        $category = get_category_by_slug( $cat_slug );
+        
+        if ( ! $category ) {
+            return $xml . self::get_xml_footer();
+        }
+        
+        $args = array(
+            'post_type'      => 'post',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'orderby'        => 'modified',
+            'order'          => 'DESC',
+            'cat'            => $category->term_id,
             'meta_query'     => array(
                 'relation' => 'OR',
                 array(

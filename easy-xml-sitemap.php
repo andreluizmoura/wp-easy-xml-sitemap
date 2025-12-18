@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Easy XML Sitemap
  * Description: Lightweight, modular XML sitemap generator for posts, pages, taxonomies, and Google News.
- * Version: 1.1.3
+ * Version: 1.2.0
  * Author: André Moura
  * Author URI: https://www.andremoura.com
  * Plugin URI:  https://wordpress.andremoura.com
@@ -37,7 +37,7 @@ class Easy_XML_Sitemap {
      *
      * @var string
      */
-    const VERSION = '1.1.0';
+    const VERSION = '1.2.0';
 
     /**
      * Settings option name
@@ -108,6 +108,12 @@ class Easy_XML_Sitemap {
      * Initialize WordPress hooks
      */
     private function init_hooks() {
+        // Disable WordPress native sitemap
+        add_filter( 'wp_sitemaps_enabled', '__return_false', 9999 );
+        
+        // Redirect native WP sitemap to our plugin
+        add_action( 'template_redirect', array( $this, 'redirect_native_sitemap' ), 0 );
+        
         // Initialize core components
         add_action( 'init', array( $this, 'init_components' ) );
         
@@ -129,6 +135,23 @@ class Easy_XML_Sitemap {
     }
 
     /**
+     * Redirect native WordPress sitemap to our plugin sitemap
+     */
+    public function redirect_native_sitemap() {
+        if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
+            return;
+        }
+        
+        $request_uri = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+        
+        // Redirect /wp-sitemap.xml to our sitemap
+        if ( false !== strpos( $request_uri, 'wp-sitemap.xml' ) ) {
+            wp_redirect( home_url( '/easy-sitemap/sitemap.xml' ), 301 );
+            exit;
+        }
+    }
+
+    /**
      * Plugin activation
      */
     public function activate() {
@@ -138,15 +161,17 @@ class Easy_XML_Sitemap {
         // Flush rewrite rules to add custom endpoints
         flush_rewrite_rules();
         
-        // Optionally, initialize default settings
+        // Initialize default settings
         $defaults = array(
-            'enable_posts'      => true,
-            'enable_pages'      => true,
-            'enable_categories' => true,
-            'enable_tags'       => true,
-            'enable_news'       => false,
-            'add_to_robots'     => true,
-            'cache_duration'    => 3600,
+            'enable_posts'        => true,
+            'posts_organization'  => 'single',
+            'enable_pages'        => true,
+            'enable_categories'   => true,
+            'enable_tags'         => true,
+            'enable_news'         => false,
+            'enable_general'      => true,
+            'add_to_robots'       => true,
+            'cache_duration'      => 3600,
         );
 
         $existing = get_option( self::OPTION_NAME, array() );
@@ -180,8 +205,8 @@ class Easy_XML_Sitemap {
             return;
         }
         
-        // Get sitemap index URL
-        $sitemap_url = Sitemap_Controller::get_sitemap_url( 'sitemap-index' );
+        // Get sitemap URL
+        $sitemap_url = home_url( '/easy-sitemap/sitemap.xml' );
         
         echo "Sitemap: " . esc_url( $sitemap_url ) . "\n";
     }
