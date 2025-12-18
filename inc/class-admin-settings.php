@@ -221,6 +221,10 @@ class Admin_Settings {
      */
     public function sanitize_settings( $input ) {
         $output = array();
+        
+        // Store old values to check if posts organization changed
+        $old_settings = get_option( self::OPTION_NAME, array() );
+        $old_organization = isset( $old_settings['posts_organization'] ) ? $old_settings['posts_organization'] : 'single';
 
         $output['enable_posts']        = isset( $input['enable_posts'] ) ? (bool) $input['enable_posts'] : false;
         $output['posts_organization']  = isset( $input['posts_organization'] ) ? sanitize_key( $input['posts_organization'] ) : 'single';
@@ -245,6 +249,45 @@ class Admin_Settings {
         if ( ! in_array( $output['posts_organization'], array( 'single', 'date', 'category' ), true ) ) {
             $output['posts_organization'] = 'single';
         }
+        
+        // Automatically regenerate cache if settings changed
+        $should_regenerate = false;
+        
+        // Check if any sitemap enable/disable changed
+        $enable_keys = array( 'enable_posts', 'enable_pages', 'enable_categories', 'enable_tags', 'enable_general', 'enable_news' );
+        foreach ( $enable_keys as $key ) {
+            $old_value = isset( $old_settings[ $key ] ) ? $old_settings[ $key ] : true;
+            $new_value = $output[ $key ];
+            if ( $old_value !== $new_value ) {
+                $should_regenerate = true;
+                break;
+            }
+        }
+        
+        // Check if posts organization changed
+        if ( $old_organization !== $output['posts_organization'] ) {
+            $should_regenerate = true;
+        }
+        
+        // Check if cache duration changed significantly
+        $old_duration = isset( $old_settings['cache_duration'] ) ? $old_settings['cache_duration'] : 3600;
+        if ( $old_duration !== $output['cache_duration'] ) {
+            $should_regenerate = true;
+        }
+        
+        // Regenerate cache if needed
+        if ( $should_regenerate ) {
+            // Clear all caches
+            Cache::clear_all();
+            
+            // Also clear any WordPress object cache
+            if ( function_exists( 'wp_cache_flush' ) ) {
+                wp_cache_flush();
+            }
+            
+            // Set a transient to show regeneration happened
+            set_transient( 'easy_xml_sitemap_regenerated', '1', 30 );
+        }
 
         return $output;
     }
@@ -263,7 +306,7 @@ class Admin_Settings {
             <h1><?php esc_html_e( 'Easy XML Sitemap Settings', 'easy-xml-sitemap' ); ?></h1>
             <p><?php esc_html_e( 'Configure XML sitemap generation for your WordPress site.', 'easy-xml-sitemap' ); ?></p>
 
-            <form method="post" action="options.php">
+            <form method="post" action="options.php" id="easy-xml-sitemap-settings-form">
                 <?php
                 settings_fields( 'easy_xml_sitemap_settings' );
                 do_settings_sections( self::PAGE_SLUG );
@@ -325,33 +368,40 @@ class Admin_Settings {
 
             <?php
             $sitemap_types = array(
-                'sitemap-index' => array(
-                    'label'   => __( 'Main Sitemap (submit this to search engines)', 'easy-xml-sitemap' ),
+                'sitemap' => array(
+                    'label'   => __( 'Main Sitemap', 'easy-xml-sitemap' ),
                     'enabled' => true,
+                    'url'     => home_url( '/easy-sitemap/sitemap.xml' ),
                 ),
                 'posts-index'   => array(
                     'label'   => __( 'Posts Sitemap', 'easy-xml-sitemap' ),
                     'enabled' => ! empty( $options['enable_posts'] ),
+                    'url'     => Sitemap_Controller::get_sitemap_url( 'posts-index' ),
                 ),
                 'pages'         => array(
                     'label'   => __( 'Pages Sitemap', 'easy-xml-sitemap' ),
                     'enabled' => ! empty( $options['enable_pages'] ),
+                    'url'     => Sitemap_Controller::get_sitemap_url( 'pages' ),
                 ),
                 'categories'    => array(
                     'label'   => __( 'Categories Sitemap', 'easy-xml-sitemap' ),
                     'enabled' => ! empty( $options['enable_categories'] ),
+                    'url'     => Sitemap_Controller::get_sitemap_url( 'categories' ),
                 ),
                 'tags'          => array(
                     'label'   => __( 'Tags Sitemap', 'easy-xml-sitemap' ),
                     'enabled' => ! empty( $options['enable_tags'] ),
+                    'url'     => Sitemap_Controller::get_sitemap_url( 'tags' ),
                 ),
                 'general'       => array(
                     'label'   => __( 'General Sitemap', 'easy-xml-sitemap' ),
                     'enabled' => ! empty( $options['enable_general'] ),
+                    'url'     => Sitemap_Controller::get_sitemap_url( 'general' ),
                 ),
                 'news'          => array(
                     'label'   => __( 'Google News Sitemap', 'easy-xml-sitemap' ),
                     'enabled' => ! empty( $options['enable_news'] ),
+                    'url'     => Sitemap_Controller::get_sitemap_url( 'news' ),
                 ),
             );
             ?>
@@ -366,13 +416,13 @@ class Admin_Settings {
                 <tbody>
                     <?php foreach ( $sitemap_types as $type => $data ) : ?>
                         <?php
-                        $url = Sitemap_Controller::get_sitemap_url( $type );
-                        $highlight_style = ( 'sitemap-index' === $type ) ? 'background-color: #f0f6fc; font-weight: 600;' : '';
+                        $url = $data['url'];
+                        $highlight_style = ( 'sitemap' === $type ) ? 'background-color: #f0f6fc; font-weight: 600;' : '';
                         ?>
                         <tr<?php if ( $highlight_style ) : ?> style="<?php echo esc_attr( $highlight_style ); ?>"<?php endif; ?>>
                             <td>
                                 <?php echo esc_html( $data['label'] ); ?>
-                                <?php if ( 'sitemap-index' === $type ) : ?>
+                                <?php if ( 'sitemap' === $type ) : ?>
                                     <br /><small style="color: #2271b1;"><?php esc_html_e( '← Submit this URL to Google Search Console and Bing Webmaster Tools', 'easy-xml-sitemap' ); ?></small>
                                 <?php endif; ?>
                             </td>
@@ -544,6 +594,25 @@ class Admin_Settings {
                 <p><?php esc_html_e( '✓ All sitemaps have been regenerated successfully.', 'easy-xml-sitemap' ); ?></p>
             </div>
             <?php
+        }
+        
+        if ( isset( $_GET['settings-updated'] ) && 'true' === sanitize_text_field( wp_unslash( $_GET['settings-updated'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            // Check if regeneration happened
+            $regenerated = get_transient( 'easy_xml_sitemap_regenerated' );
+            if ( $regenerated ) {
+                delete_transient( 'easy_xml_sitemap_regenerated' );
+                ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><?php esc_html_e( '✓ Settings saved successfully. Cache has been automatically regenerated.', 'easy-xml-sitemap' ); ?></p>
+                </div>
+                <?php
+            } else {
+                ?>
+                <div class="notice notice-success is-dismissible">
+                    <p><?php esc_html_e( '✓ Settings saved successfully.', 'easy-xml-sitemap' ); ?></p>
+                </div>
+                <?php
+            }
         }
     }
 }

@@ -121,8 +121,8 @@ class Easy_XML_Sitemap {
         register_activation_hook( EASY_XML_SITEMAP_FILE, array( $this, 'activate' ) );
         register_deactivation_hook( EASY_XML_SITEMAP_FILE, array( $this, 'deactivate' ) );
         
-        // Add sitemap to robots.txt if enabled
-        add_action( 'do_robots', array( $this, 'add_robots_sitemap' ), 0 );
+        // Add sitemap to robots.txt if enabled (using filter for proper formatting)
+        add_filter( 'robots_txt', array( $this, 'add_robots_sitemap' ), 10, 2 );
     }
 
     /**
@@ -195,20 +195,32 @@ class Easy_XML_Sitemap {
     }
 
     /**
-     * Add sitemap index to robots.txt
+     * Add sitemap to robots.txt (via filter for proper formatting)
+     * 
+     * @param string $output The robots.txt output
+     * @param bool   $public Whether the site is public
+     * @return string Modified robots.txt output
      */
-    public function add_robots_sitemap() {
+    public function add_robots_sitemap( $output, $public ) {
         $settings = get_option( 'easy_xml_sitemap_settings', array() );
         
         // Check if option is enabled
         if ( empty( $settings['add_to_robots'] ) ) {
-            return;
+            return $output;
         }
         
         // Get sitemap URL
         $sitemap_url = home_url( '/easy-sitemap/sitemap.xml' );
         
-        echo "Sitemap: " . esc_url( $sitemap_url ) . "\n";
+        // Check if sitemap line already exists to avoid duplication
+        if ( false !== strpos( $output, $sitemap_url ) ) {
+            return $output;
+        }
+        
+        // Add sitemap at the end with proper formatting
+        $output .= "\nSitemap: " . esc_url( $sitemap_url ) . "\n";
+        
+        return $output;
     }
 }
 

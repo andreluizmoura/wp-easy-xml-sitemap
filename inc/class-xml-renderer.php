@@ -237,10 +237,16 @@ class XML_Renderer {
             // Get all categories with posts
             $categories = get_categories( array(
                 'hide_empty' => true,
+                'orderby'    => 'name',
+                'order'      => 'ASC',
             ) );
             
             foreach ( $categories as $category ) {
-                $url = home_url( '/easy-sitemap/posts-category-' . $category->slug . '.xml' );
+                // Use category slug directly (WordPress ensures it's URL-safe)
+                $category_slug = $category->slug;
+                
+                // Build URL: /easy-sitemap/posts-{slug}.xml (not posts-category-{slug})
+                $url = home_url( '/easy-sitemap/posts-' . $category_slug . '.xml' );
                 $lastmod = gmdate( 'c' );
                 
                 $xml .= self::render_sitemap_entry( $url, $lastmod );
