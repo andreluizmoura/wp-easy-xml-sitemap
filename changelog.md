@@ -287,7 +287,6 @@ We welcome feature suggestions! Please:
 
 - [Plugin Homepage](https://wordpress.andremoura.com)
 - [WordPress.org Plugin Page](https://wordpress.org/plugins/easy-xml-sitemap/)
-- [GitHub Repository](https://github.com/andremoura/easy-xml-sitemap)
 - [Support Forum](https://wordpress.org/support/plugin/easy-xml-sitemap/)
 - [Documentation](https://wordpress.andremoura.com/easy-xml-sitemap/docs/)
 
