@@ -247,19 +247,8 @@ This plugin is designed for performance:
 Need help? We're here for you:
 
 * [Support Forum](https://wordpress.org/support/plugin/easy-xml-sitemap/)
-* [GitHub Issues](https://github.com/andremoura/easy-xml-sitemap/issues)
 * [Documentation](https://wordpress.andremoura.com)
 * Email: plugins@andremoura.com
-
-== Contributing ==
-
-Contributions are welcome! Visit our [GitHub repository](https://github.com/andremoura/easy-xml-sitemap) to:
-* Report bugs
-* Suggest features
-* Submit pull requests
-* Review code
-
-See [CONTRIBUTING.md](https://github.com/andremoura/easy-xml-sitemap/blob/main/CONTRIBUTING.md) for guidelines.
 
 == Privacy ==
 
