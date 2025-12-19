@@ -279,7 +279,6 @@ This plugin:
 == Links ==
 
 * [Plugin Homepage](https://wordpress.andremoura.com)
-* [GitHub Repository](https://github.com/andremoura/easy-xml-sitemap)
 * [Support Forum](https://wordpress.org/support/plugin/easy-xml-sitemap/)
 * [Sitemaps Protocol](https://www.sitemaps.org/protocol.html)
 * [Google Sitemap Guidelines](https://developers.google.com/search/docs/advanced/sitemaps/overview)
