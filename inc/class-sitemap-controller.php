@@ -45,6 +45,14 @@ class Sitemap_Controller {
 	public function register_rewrite_rules() {
 		$slug = self::SITEMAP_SLUG;
 
+		// Nova rota principal: /sitemap.xml
+		add_rewrite_rule(
+			'^sitemap\.xml$',
+			'index.php?easy_sitemap_type=sitemap-index',
+			'top'
+		);
+
+		// Rota legacy: /easy-sitemap/sitemap.xml (mantida para compatibilidade)
 		add_rewrite_rule(
 			'^' . $slug . '/sitemap\.xml$',
 			'index.php?easy_sitemap_type=sitemap-index',
@@ -119,6 +127,13 @@ class Sitemap_Controller {
 			}
 		}
 
+		// Nova rota principal: /sitemap.xml
+		if ( '/sitemap.xml' === $req_path ) {
+			self::record_hit_stat( 'sitemap-index' );
+			$this->serve_sitemap( 'sitemap-index' );
+		}
+
+		// Rota legacy: /easy-sitemap/sitemap.xml
 		$base = '/' . self::SITEMAP_SLUG . '/';
 
 		if ( 0 !== strpos( $req_path, $base ) ) {
@@ -448,14 +463,14 @@ class Sitemap_Controller {
 	}
 
 	/**
- * Build a sitemap URL for a given type.
- *
- * @param string $type Sitemap type slug (e.g. 'posts-index', 'pages', 'news').
- * @return string
- */
-public static function get_sitemap_url( $type ) {
-	$type = sanitize_key( (string) $type );
-	return home_url( '/' . self::SITEMAP_SLUG . '/' . $type . '.xml' );
-}
+	 * Build a sitemap URL for a given type.
+	 *
+	 * @param string $type Sitemap type slug (e.g. 'posts-index', 'pages', 'news').
+	 * @return string
+	 */
+	public static function get_sitemap_url( $type ) {
+		$type = sanitize_key( (string) $type );
+		return home_url( '/' . self::SITEMAP_SLUG . '/' . $type . '.xml' );
+	}
 
 }

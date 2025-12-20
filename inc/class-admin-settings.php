@@ -398,7 +398,7 @@ class Admin_Settings {
     private function render_tab_quicklinks( $settings ) {
         echo '<h2>' . esc_html__( 'Quick Links', 'easy-xml-sitemap' ) . '</h2>';
 
-        $sitemap_index_url = home_url( '/easy-sitemap/sitemap.xml' );
+        $sitemap_index_url = home_url( '/sitemap.xml' );
         $robots_url        = home_url( '/robots.txt' );
 
         echo '<div style="max-width:1000px;margin:12px 0;padding:12px;border:1px solid #ccd0d4;background:#fff;border-radius:6px;">';

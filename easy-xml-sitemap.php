@@ -117,7 +117,7 @@ final class Easy_XML_Sitemap {
         $request_uri = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
 
         if ( false !== strpos( $request_uri, 'wp-sitemap.xml' ) ) {
-            wp_redirect( home_url( '/easy-sitemap/sitemap.xml' ), 301 );
+            wp_redirect( home_url( '/sitemap.xml' ), 301 );
             exit;
         }
     }
@@ -196,7 +196,7 @@ final class Easy_XML_Sitemap {
             return $output;
         }
 
-        $sitemap_url = home_url( '/easy-sitemap/sitemap.xml' );
+        $sitemap_url = home_url( '/sitemap.xml' );
 
         if ( false !== strpos( $output, $sitemap_url ) ) {
             return $output;
@@ -254,7 +254,7 @@ final class Easy_XML_Sitemap {
             return;
         }
 
-        $sitemap_url = rawurlencode( home_url( '/easy-sitemap/sitemap.xml' ) );
+        $sitemap_url = rawurlencode( home_url( '/sitemap.xml' ) );
 
         $targets = array();
 
@@ -347,7 +347,7 @@ final class Easy_XML_Sitemap {
 
         echo '<div class="notice notice-warning"><p>';
         echo '<strong>Easy XML Sitemap:</strong> ';
-        echo esc_html__( 'Detectamos outro plugin de SEO ativo (Yoast SEO ou Rank Math). Para evitar confusão nos motores de busca, recomendamos manter apenas um sitemap ativo. Este plugin publica sitemaps em /easy-sitemap/sitemap.xml e não altera automaticamente as configurações do seu plugin de SEO.', 'easy-xml-sitemap' );
+        echo esc_html__( 'Detectamos outro plugin de SEO ativo (Yoast SEO ou Rank Math). Para evitar confusão nos motores de busca, recomendamos manter apenas um sitemap ativo. Este plugin publica sitemaps em /sitemap.xml e não altera automaticamente as configurações do seu plugin de SEO.', 'easy-xml-sitemap' );
         echo '</p></div>';
     }
 }
