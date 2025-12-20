@@ -278,4 +278,15 @@ class Post_Meta {
 
         return array_map( 'intval', $query->posts );
     }
+
+    /**
+ * Check if a post is excluded from sitemaps.
+ *
+ * @param int $post_id Post ID.
+ * @return bool
+ */
+public static function is_excluded( $post_id ) {
+    return (bool) get_post_meta( (int) $post_id, self::META_KEY, true );
+}
+
 }

@@ -1,273 +1,208 @@
 === Easy XML Sitemap ===
 Contributors: andremoura
-Tags: sitemap, xml sitemap, seo, google news, robots.txt
+Donate link: https://www.andremoura.com
+Tags: sitemap, xml sitemap, seo, google news, image sitemap, video sitemap
 Requires at least: 5.0
 Tested up to: 6.9
+Stable tag: 2.0.0
 Requires PHP: 7.2
-Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Lightweight XML sitemap generator with posts organization options, sitemap index, and robots.txt integration.
+Easy XML Sitemap is a lightweight, modular XML sitemap generator with custom post type support, image/video sitemap extensions, WP-CLI, automatic ping, and a clear status page.
 
 == Description ==
 
-Easy XML Sitemap is a lightweight and efficient plugin that generates XML sitemaps for your WordPress site. It focuses on performance, modularity, and scalability for sites of all sizes.
+Easy XML Sitemap is a lightweight and extensible XML sitemap plugin for WordPress.
 
-**Key Features**
+It generates a sitemap index and multiple sitemap endpoints, supports all public custom post types, and can include images and videos inside each URL entry (Google extensions). It also provides a Status page with technical statistics (generation time, URL counts, hits, and ping results) so you can quickly confirm that everything is working.
 
-* **Flexible Posts Organization**: Choose how to organize your posts sitemaps
-	+ Single sitemap (all posts in one file)
-	+ Organize by date (one sitemap per month/year) - ideal for news sites
-	+ Organize by category (one sitemap per category) - great for multi-topic blogs
-* **Sitemap Index**: Automatically generates a sitemap index (`sitemap.xml`)
-* **Multiple Sitemap Types**:
-	+ Posts (with organization options)
-	+ Pages
-	+ Categories
-	+ Tags
-	+ General (comprehensive all-in-one)
-	+ Google News (optional, last 2 days)
-* **robots.txt Integration**: Automatic sitemap URL addition to virtual robots.txt
-* **Per-Post/Page Exclusion**: Simple checkbox to exclude individual content
-* **Smart Caching System**: Configurable cache duration with automatic invalidation
-* **Performance-Optimized**: Efficient queries designed for large content libraries
-* **Developer-Friendly**: Filters, actions, and clean code structure
+The plugin is designed to be safe in real-world WordPress setups:
+- It uses caching for performance
+- It supports large sites via sitemap index and posts organization options
+- It includes WP-CLI commands for maintenance
+- It pings search engines on updates with debounce to avoid excessive requests
+- It detects when Yoast SEO or Rank Math are active and warns you clearly, without automatically overriding other plugins
 
-**Perfect For**
+Main sitemap index URL:
+- /easy-sitemap/sitemap.xml
 
-* Blogs with 10,000+ posts (use date or category organization)
-* News sites publishing frequently
-* Multi-category content sites
-* Small to enterprise-level WordPress sites
-* Developers who need extensibility
+== Features ==
 
-**Works Alongside Popular SEO Plugins**
+* Sitemap Index at `/easy-sitemap/sitemap.xml`
+* Supports all public Custom Post Types (CPTs) with UI controls
+* Posts can be organized as:
+  - Single sitemap (all posts in one file)
+  - By date (one sitemap per month/year)
+  - By category (one sitemap per category)
+* Image sitemap extension:
+  - Featured images
+  - Images found in post content
+* Video sitemap extension (conservative and safe):
+  - YouTube embeds supported with reliable thumbnails
+  - Self-hosted video supported when thumbnail is available
+  - Vimeo supported only when a reliable thumbnail is available (fallback strategy)
+* Automatic ping to search engines on content update (debounced)
+* Status page with technical sitemap statistics and ping results
+* WP-CLI commands: status, regenerate, clear-cache
+* robots.txt integration (adds sitemap URL to the virtual robots.txt)
+* Per-post exclusion controls (existing feature preserved)
 
-Compatible with Yoast SEO, Rank Math, All in One SEO, and others. Simply disable their sitemap feature and use Easy XML Sitemap for better performance.
+== Sitemap Endpoints ==
 
-**Developer-Friendly**
+Sitemap index:
+- `/easy-sitemap/sitemap.xml`
 
-All core components are structured in classes and namespaced, with hooks provided throughout:
+Legacy endpoints (still supported):
+- `/easy-sitemap/posts-index.xml`
+- `/easy-sitemap/posts-YYYY-MM.xml` (when organizing posts by date)
+- `/easy-sitemap/posts-{category-slug}.xml` (when organizing posts by category)
+- `/easy-sitemap/pages.xml`
+- `/easy-sitemap/tags.xml`
+- `/easy-sitemap/categories.xml`
+- `/easy-sitemap/general.xml`
+- `/easy-sitemap/news.xml`
 
-* `easy_xml_sitemap_before_render`
-* `easy_xml_sitemap_after_render`
-* `easy_xml_sitemap_before_clear_cache`
-* `easy_xml_sitemap_after_clear_cache`
-* `easy_xml_sitemap_meta_box_post_types`
-* `easy_xml_sitemap_cache_duration`
-* and more…
+Custom post type sitemaps (v2.0.0):
+- `/easy-sitemap/{posttype}.xml` (example: `/easy-sitemap/product.xml`)
 
 == Installation ==
 
-**Automatic Installation**
+1. Upload the plugin files to `/wp-content/plugins/easy-xml-sitemap/`, or install the plugin through the WordPress plugins screen.
+2. Activate the plugin through the 'Plugins' screen in WordPress.
+3. Go to Settings → Easy Sitemap.
+4. Configure which post types should be included.
+5. Visit `/easy-sitemap/sitemap.xml` to confirm output.
 
-1. Go to WordPress admin → Plugins → Add New
-2. Search for "Easy XML Sitemap"
-3. Click "Install Now" → "Activate"
-4. Go to Settings → Easy Sitemap to configure
-
-**Manual Installation**
-
-1. Download the plugin ZIP file
-2. Go to Plugins → Add New → Upload Plugin
-3. Choose the ZIP file and click "Install Now"
-4. Activate the plugin
-5. Configure at Settings → Easy Sitemap
-
-**After Installation**
-
-1. Visit Settings → Easy Sitemap
-2. Choose your posts organization method:
-   - **Single**: All posts in one file (best for <5,000 posts)
-   - **Date**: One sitemap per month (best for news/time-based sites)
-   - **Category**: One sitemap per category (best for topic-based sites)
-3. Enable/disable other sitemap types as needed
-4. Configure cache duration (default: 1 hour)
-5. Save settings
-6. Go to Settings → Permalinks and click "Save Changes" (flush rewrite rules)
-7. Visit `https://your-site.com/easy-sitemap/sitemap.xml` to verify
-8. Submit your sitemap to Google Search Console and Bing Webmaster Tools
+If you change permalink structure or install the plugin on an existing site, you may need to:
+- click "Regenerate All Sitemaps" in the settings page, or
+- run WP-CLI commands (see FAQ)
 
 == Frequently Asked Questions ==
 
-= Where is my sitemap located? =
+= Where is the sitemap? =
+The main sitemap index is:
+- `/easy-sitemap/sitemap.xml`
 
-The main sitemap index is at:
-`https://your-site.com/easy-sitemap/sitemap.xml`
+This index lists all enabled sitemap endpoints.
 
-Individual sitemaps are automatically generated based on your organization settings.
+= Does it support Custom Post Types? =
+Yes. In v2.0.0 you can enable/disable all public custom post types in Settings → Easy Sitemap → Post Types.
+Each enabled post type is published at:
+- `/easy-sitemap/{posttype}.xml`
 
-= Does this plugin conflict with SEO plugins? =
+= Can it include images in the sitemap? =
+Yes. Enable "Include Images" in Settings → Easy Sitemap → Media.
+The plugin includes:
+- Featured images
+- Images found in post content (`<img src="...">`)
 
-No conflicts. This plugin works alongside popular SEO plugins. If your SEO plugin has sitemap functionality, you can disable it and use Easy XML Sitemap instead for better performance on large sites.
+= Can it include videos in the sitemap? =
+Yes, but this is intentionally conservative to avoid generating invalid video sitemap entries.
+Enable "Include Videos" in Settings → Easy Sitemap → Media.
 
-= Which posts organization method should I choose? =
+Notes:
+- YouTube embeds are supported with reliable thumbnails.
+- Self-hosted video can be included when a thumbnail is available.
+- Vimeo thumbnails require API access; this plugin avoids external dependencies and only includes Vimeo when a reliable thumbnail is available (fallback uses featured image when possible).
 
-* **Single** (default): Best for sites with <5,000 posts. All posts in one file.
-* **Date**: Best for news sites, blogs with frequent updates, or sites with 10,000+ posts. Creates one sitemap per month/year.
-* **Category**: Best for multi-topic sites with well-organized categories. Creates one sitemap per category.
+= Why does it say it detected Yoast SEO or Rank Math? Will there be conflicts? =
+Yoast SEO and Rank Math often generate their own sitemaps.
+Running multiple sitemaps can confuse site owners and crawlers.
 
-You can change this anytime in Settings → Easy Sitemap.
+Easy XML Sitemap:
+- does NOT disable Yoast/Rank Math automatically
+- does NOT override their settings
+- does NOT intercept their sitemap URLs
+- simply warns you clearly so you can choose which sitemap to use
 
-= Does it support custom post types? =
+Recommendation:
+Use only one sitemap solution and submit the chosen sitemap in Google Search Console.
 
-Currently, the plugin supports posts and pages. Custom post type support is planned for a future release.
+= Does the plugin ping search engines automatically? =
+Yes. When enabled (Advanced tab), the plugin pings search engines after content updates.
+It uses a debounce delay so that multiple updates in a short time trigger only one ping.
 
-= How do I exclude specific posts from the sitemap? =
+You can configure:
+- enable/disable auto ping
+- choose engines (Google/Bing)
+- debounce delay (minutes)
 
-1. Edit the post or page
-2. Look for "XML Sitemap Options" in the sidebar (Gutenberg) or below the editor (Classic)
-3. Check "Exclude from XML sitemaps"
-4. Update/save the post
+= What does the Status page show? =
+Settings → Easy Sitemap → Status shows technical diagnostics:
+- last generation timestamp
+- URL count from last generation
+- generation time
+- total hits and hits by endpoint type
+- last ping time, engine and status
 
-= Does this plugin submit the sitemap to search engines? =
+This is not SEO analytics — it is technical health information.
 
-No, you need to manually submit your sitemap URL to:
-* [Google Search Console](https://search.google.com/search-console)
-* [Bing Webmaster Tools](https://www.bing.com/webmasters)
+= What WP-CLI commands are available? =
+The plugin provides a minimal set of WP-CLI commands:
 
-Enter: `easy-sitemap/sitemap.xml` in the sitemap submission field.
+- `wp easy-sitemap status`
+  Shows last generation stats and hit counters.
 
-= Why isn't my sitemap showing in robots.txt? =
+- `wp easy-sitemap regenerate`
+  Clears cache so the sitemap is regenerated on next request.
 
-The automatic robots.txt integration only works with WordPress's **virtual** robots.txt. If you have a physical `robots.txt` file in your site root, the plugin can't modify it. Either:
-1. Delete the physical file (after backing it up), or
-2. Manually add this line: `Sitemap: https://your-site.com/easy-sitemap/sitemap.xml`
+- `wp easy-sitemap clear-cache`
+  Clears cache immediately.
 
-Check Settings → Easy Sitemap for detection and instructions.
+These are useful after large imports, deployments, or troubleshooting.
 
-= How do I clear the sitemap cache? =
+= Does it affect robots.txt? =
+If enabled, the plugin adds the sitemap index URL to WordPress' virtual robots.txt output.
+This does not modify a physical robots.txt file on disk.
 
-Go to Settings → Easy Sitemap and click "Regenerate All Sitemaps". The cache also clears automatically when you:
-* Publish, update, or delete posts/pages
-* Change categories or tags
-* Modify sitemap settings
+= My sitemap returns 404. What should I do? =
+Most common causes:
+1) Permalink rules not flushed
+2) Cached rewrite rules on the site
 
-= My sitemaps return 404 errors =
-
-1. Go to Settings → Permalinks
-2. Click "Save Changes" (this flushes rewrite rules)
-3. Test your sitemap URL again
-
-= How do I check which organization method is active? =
-
-Go to Settings → Easy Sitemap and look at the "Posts Organization" setting. You'll see three options:
-* Single sitemap
-* Organize by date
-* Organize by category
-
-The selected option shows which structure is currently active.
+Fix:
+- Go to Settings → Permalinks and click "Save" (without changes), or
+- Use the "Regenerate All Sitemaps" button, or
+- Run `wp rewrite flush --hard` and `wp easy-sitemap regenerate`
 
 == Screenshots ==
 
-1. **Admin Settings Page** - Configure sitemap types and posts organization
-2. **Posts Organization Options** - Choose between single, date, or category organization
-3. **Sitemap URLs Table** - View all your sitemap URLs with status
-4. **robots.txt Integration** - Automatic sitemap detection and warnings
-5. **Per-Post Exclusion** - Simple checkbox in the post editor
-6. **Sitemap Index Output** - Styled XML view in browser
-7. **Individual Sitemap Output** - Clean, valid XML for search engines
+1. Main Settings tab (sitemap selection and posts organization)
+2. Post Types tab (enable/disable CPTs)
+3. Media tab (image and video options)
+4. Status tab (technical diagnostics and ping results)
+5. Advanced tab (robots.txt, cache duration, automatic ping)
 
 == Changelog ==
 
-= 1.2.0 - 2024-12-19 =
-
-**Added**
-* Posts organization options: single, by date, or by category
-* Dynamic posts index that adapts to organization method
-* Posts by date sitemaps: `/easy-sitemap/posts-YYYY-MM.xml`
-* Posts by category sitemaps: `/easy-sitemap/posts-{category-slug}.xml`
-* Radio button UI for organization selection
-* Automatic cache regeneration when settings change
-
-**Changed**
-* Posts sitemap now serves as index when date/category organization enabled
-* Enhanced admin settings page with better help text
-* Improved cache invalidation for dynamic sitemap types
-* Updated rewrite rules to support dynamic URL patterns
-
-**Fixed**
-* Critical: Fatal error in sitemap controller causing activation failure
-* Critical: Malformed rewrite rules and duplicate function declarations
-* Performance: Optimized database queries for organized sitemaps
-* Cache key generation for dynamic sitemap types
-
-= 1.1.3 - 2024-12-15 =
-* Added plugin icons for WordPress.org directory
-* Enhanced visual branding
-
-= 1.1.0 - 2024-12-05 =
-* Added sitemap index file (`sitemap.xml`)
-* Added robots.txt integration with automatic detection
-* Changed base path from `/easy-xml-sitemap/` to `/easy-sitemap/`
-* Updated settings menu name to "Easy Sitemap"
-* Enhanced admin interface with better organization
-* Added robots.txt status detection and warnings
-* Improved cache management
-
-= 1.0.0 - 2024-12-05 =
-* Initial release
-* Multiple sitemap types (posts, pages, tags, categories, general, news)
-* Per-post/page exclusion controls
-* Smart caching system
-* Admin settings page
-* Classic and block editor support
-* Multisite compatible
-
-== Upgrade Notice ==
+= 2.0.0 =
+- Added Custom Post Type support with UI controls
+- Added Image sitemap support (featured + content images)
+- Added Video sitemap support (conservative and safe)
+- Added Status page with sitemap technical statistics
+- Added WP-CLI commands (status, regenerate, clear-cache)
+- Added automatic ping to search engines on content updates (debounced)
+- Added safe compatibility UX for Yoast SEO and Rank Math (notice only; no overrides)
+- Refactored rewrite rules and routing for CPT endpoints
+- Settings UI reorganized into tabs for clarity
 
 = 1.2.0 =
-Major update with posts organization options. Recommended for sites with 10,000+ posts. Backup before upgrading. After upgrade: 1) Go to Settings → Easy Sitemap and choose organization method, 2) Go to Settings → Permalinks and save, 3) Clear all caches, 4) Resubmit sitemap to search engines.
+- Posts organization options: single/date/category
+- Dynamic posts index with date and category sitemap endpoints
+- Settings UI improvements
+- Cache invalidation improvements and rewrite rules fixes
+
+= 1.1.3 =
+- Plugin icons for WordPress.org directory
+- Enhanced visual branding
 
 = 1.1.0 =
-URL structure changed. Main sitemap moved to `/easy-sitemap/sitemap.xml`. After updating, flush permalinks (Settings → Permalinks → Save) and resubmit to Google Search Console.
+- Sitemap index at /easy-sitemap/sitemap.xml
+- robots.txt integration and admin enhancements
+- Base path changed to /easy-sitemap/
 
 = 1.0.0 =
-Initial release of Easy XML Sitemap.
-
-== Performance ==
-
-This plugin is designed for performance:
-
-* **Efficient Database Queries**: Optimized for large databases
-* **Smart Caching**: Transient-based with configurable duration
-* **Conditional Loading**: Admin resources only load when needed
-* **No Front-End Impact**: Pure XML output, no styling or JavaScript
-* **Scalable Organization**: Date/category methods handle 100,000+ posts
-
-**Benchmarks** (average generation time on standard hosting):
-* 1,000 posts: <0.5 seconds
-* 10,000 posts (single): ~2 seconds
-* 10,000 posts (by date): <0.5 seconds per month
-* 50,000 posts (by date): <0.5 seconds per month
-
-== Support ==
-
-Need help? We're here for you:
-
-* [Support Forum](https://wordpress.org/support/plugin/easy-xml-sitemap/)
-* [Documentation](https://wordpress.andremoura.com)
-* Email: plugins@andremoura.com
-
-== Privacy ==
-
-This plugin:
-* Does NOT collect any user data
-* Does NOT make external API calls
-* Does NOT use cookies
-* Does NOT track users
-* Only generates XML files based on your public WordPress content
-
-== Credits ==
-
-**Developer**: André Moura
-**Website**: [wordpress.andremoura.com](https://wordpress.andremoura.com)
-**License**: GPL v2 or later
-
-== Links ==
-
-* [Plugin Homepage](https://wordpress.andremoura.com)
-* [Support Forum](https://wordpress.org/support/plugin/easy-xml-sitemap/)
-* [Sitemaps Protocol](https://www.sitemaps.org/protocol.html)
-* [Google Sitemap Guidelines](https://developers.google.com/search/docs/advanced/sitemaps/overview)
+- Initial release
+- Multiple sitemap types (posts, pages, tags, categories, general, news)
+- Exclusion controls and caching
