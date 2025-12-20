@@ -1,6 +1,6 @@
 === Easy XML Sitemap ===
 Contributors: andremoura
-Donate link: https://www.andremoura.com
+Donate link: https://wordpress.andremoura.com
 Tags: sitemap, xml sitemap, seo, google news, image sitemap, video sitemap
 Requires at least: 5.0
 Tested up to: 6.9
