@@ -1,6 +1,8 @@
 === Easy XML Sitemap ===
 Contributors: andremoura
-Donate link: https://wordpress.andremoura.com
+Author URI: https://www.andremoura.com
+Plugin URI:  https://wordpress.andremoura.com
+Donate link: https://ko-fi.com/andremouradev
 Tags: sitemap, xml sitemap, seo, image sitemap, video sitemap
 Requires at least: 5.0
 Tested up to: 6.9
