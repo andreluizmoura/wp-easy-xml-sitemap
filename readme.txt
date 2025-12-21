@@ -1,7 +1,7 @@
 === Easy XML Sitemap ===
 Contributors: andremoura
 Donate link: https://wordpress.andremoura.com
-Tags: sitemap, xml sitemap, seo, google news, image sitemap, video sitemap
+Tags: sitemap, xml sitemap, seo, image sitemap, video sitemap
 Requires at least: 5.0
 Tested up to: 6.9
 Stable tag: 2.0.1
@@ -9,7 +9,7 @@ Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Easy XML Sitemap is a lightweight, modular XML sitemap generator with custom post type support, image/video sitemap extensions, WP-CLI, automatic ping, and a clear status page.
+Easy XML Sitemap is a lightweight XML sitemap generator with custom post type support, image and video extensions, WP-CLI, and automatic ping.
 
 == Description ==
 
