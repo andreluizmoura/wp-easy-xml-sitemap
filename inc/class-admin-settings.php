@@ -782,7 +782,7 @@ class Admin_Settings {
 
         echo '<div style="margin-top:30px;padding:20px;background:#f0f0f1;border-radius:8px;text-align:center;">';
         echo '<p style="margin:0 0 10px 0;font-size:14px;">' . 
-             esc_html__( 'Gostou dos meus plugins? Considere apoiar o desenvolvimento:', 'easy-xml-sitemap' ) . 
+             esc_html__( 'Are you enjoying this plugin? Support its development:', 'easy-xml-sitemap' ) . 
              '</p>';
         echo '<a href="https://ko-fi.com/andremouradev" target="_blank" rel="noopener noreferrer" class="button button-primary">' . 
              esc_html__( '☕ Apoiar no Ko-fi', 'easy-xml-sitemap' ) . 
