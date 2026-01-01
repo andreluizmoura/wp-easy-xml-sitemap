@@ -258,7 +258,7 @@ class Admin_Settings {
             'quicklinks'  => __( 'Quick Links', 'easy-xml-sitemap' ),
             'status'      => __( 'Status', 'easy-xml-sitemap' ),
             'advanced'    => __( 'Advanced', 'easy-xml-sitemap' ),
-            'plugins'     => __( 'Outros Plugins', 'easy-xml-sitemap' ),
+            'plugins'     => __( 'Our Plugins', 'easy-xml-sitemap' ),
         );
 
         echo '<h2 class="nav-tab-wrapper">';
@@ -659,10 +659,10 @@ class Admin_Settings {
     }
 
     private function render_tab_plugins() {
-        echo '<h2>' . esc_html__( 'Outros Plugins do Autor', 'easy-xml-sitemap' ) . '</h2>';
+        echo '<h2>' . esc_html__( 'More Plugins from the Author', 'easy-xml-sitemap' ) . '</h2>';
         
         echo '<p class="description">' . esc_html__( 
-            'Confira outros plugins desenvolvidos por André Moura que podem ajudar a melhorar seu site WordPress.', 
+            'More plugins developed by André Moura to help you and your WordPress site.', 
             'easy-xml-sitemap' 
         ) . '</p>';
 
@@ -750,9 +750,9 @@ class Admin_Settings {
             $status = $this->get_plugin_status( $plugin['slug'] );
             
             $status_labels = array(
-                'active'        => __( 'Ativo', 'easy-xml-sitemap' ),
-                'inactive'      => __( 'Instalado', 'easy-xml-sitemap' ),
-                'not-installed' => __( 'Não Instalado', 'easy-xml-sitemap' ),
+                'active'        => __( 'Active', 'easy-xml-sitemap' ),
+                'inactive'      => __( 'Installed', 'easy-xml-sitemap' ),
+                'not-installed' => __( 'To be Installed', 'easy-xml-sitemap' ),
             );
 
             echo '<div class="ezs-plugin-card">';
@@ -771,7 +771,7 @@ class Admin_Settings {
             
             echo '<div class="ezs-plugin-actions">';
             echo '<a href="' . esc_url( $plugin['url'] ) . '" target="_blank" rel="noopener noreferrer" class="ezs-plugin-link">' . 
-                 esc_html__( 'Ver Detalhes', 'easy-xml-sitemap' ) . 
+                 esc_html__( 'See more', 'easy-xml-sitemap' ) . 
                  '</a>';
             echo '</div>';
             
