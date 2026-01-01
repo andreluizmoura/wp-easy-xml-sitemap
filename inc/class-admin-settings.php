@@ -227,21 +227,25 @@ class Admin_Settings {
             $this->render_tab_status();
         } elseif ( 'advanced' === $tab ) {
             $this->render_tab_advanced( $settings );
+        } elseif ( 'plugins' === $tab ) {
+            $this->render_tab_plugins();
         }
 
-        if ( ! in_array( $tab, array( 'status', 'quicklinks' ), true ) ) {
+        if ( ! in_array( $tab, array( 'status', 'quicklinks', 'plugins' ), true ) ) {
             submit_button();
         }
 
         echo '</form>';
 
         // Regenerate button (separate form)
-        echo '<hr />';
-        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
-        echo '<input type="hidden" name="action" value="easy_xml_sitemap_regenerate" />';
-        wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD );
-        submit_button( __( 'Regenerate All Sitemaps', 'easy-xml-sitemap' ), 'secondary' );
-        echo '</form>';
+        if ( 'plugins' !== $tab ) {
+            echo '<hr />';
+            echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+            echo '<input type="hidden" name="action" value="easy_xml_sitemap_regenerate" />';
+            wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD );
+            submit_button( __( 'Regenerate All Sitemaps', 'easy-xml-sitemap' ), 'secondary' );
+            echo '</form>';
+        }
 
         echo '</div>';
     }
@@ -254,6 +258,7 @@ class Admin_Settings {
             'quicklinks'  => __( 'Quick Links', 'easy-xml-sitemap' ),
             'status'      => __( 'Status', 'easy-xml-sitemap' ),
             'advanced'    => __( 'Advanced', 'easy-xml-sitemap' ),
+            'plugins'     => __( 'Outros Plugins', 'easy-xml-sitemap' ),
         );
 
         echo '<h2 class="nav-tab-wrapper">';
@@ -598,6 +603,191 @@ class Admin_Settings {
         echo '<p><strong>' . esc_html__( 'Debounce window (minutes)', 'easy-xml-sitemap' ) . '</strong><br />';
         echo '<input type="number" min="1" max="60" name="' . esc_attr( self::OPTION_NAME ) . '[ping_debounce_min]" value="' . esc_attr( $debounce ) . '" />';
         echo '<br /><span class="description">' . esc_html__( 'Prevents too many pings during frequent updates. Recommended: 5.', 'easy-xml-sitemap' ) . '</span></p>';
+    }
+
+    /**
+     * Get list of other plugins
+     * 
+     * @return array Array of plugin data
+     */
+    private function get_other_plugins() {
+        return array(
+            array(
+                'name'        => 'Easy XML Sitemap',
+                'slug'        => 'easy-xml-sitemap',
+                'description' => 'Easy XML Sitemap is a lightweight and extensible XML sitemap plugin for WordPress.',
+                'url'         => 'https://wordpress.org/plugins/easy-xml-sitemap/',
+                'icon'        => '⚡',
+            ),
+            array(
+                'name'        => 'Easy Bulk Date Editor',
+                'slug'        => 'easy-bulk-date-editor',
+                'description' => 'Easy Bulk Date Editor is a lightweight WordPress admin plugin that allows editors and administrators to bulk edit post publication dates with precision and control.',
+                'url'         => 'https://wordpress.org/plugins/easy-bulk-date-editor/',
+                'icon'        => '🚀',
+            ),
+            array(
+                'name'        => 'List Post Tags Shortcode',
+                'slug'        => 'list-post-tags-shortcode',
+                'description' => 'Display all post tags on your site using a simple shortcode with customizable format, sorting, and caching options.',
+                'url'         => 'https://wordpress.org/plugins/list-post-tags-shortcode/',
+                'icon'        => '⭐',
+            ),
+        );
+    }
+
+    /**
+     * Check if a plugin is installed
+     * 
+     * @param string $slug Plugin slug
+     * @return string Status: 'active', 'inactive', or 'not-installed'
+     */
+    private function get_plugin_status( $slug ) {
+        if ( ! function_exists( 'get_plugins' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+
+        $all_plugins = get_plugins();
+
+        foreach ( $all_plugins as $plugin_path => $plugin_data ) {
+            if ( strpos( $plugin_path, $slug . '/' ) === 0 ) {
+                return is_plugin_active( $plugin_path ) ? 'active' : 'inactive';
+            }
+        }
+
+        return 'not-installed';
+    }
+
+    private function render_tab_plugins() {
+        echo '<h2>' . esc_html__( 'Outros Plugins do Autor', 'easy-xml-sitemap' ) . '</h2>';
+        
+        echo '<p class="description">' . esc_html__( 
+            'Confira outros plugins desenvolvidos por André Moura que podem ajudar a melhorar seu site WordPress.', 
+            'easy-xml-sitemap' 
+        ) . '</p>';
+
+        $plugins = $this->get_other_plugins();
+
+        echo '<style>
+            .ezs-plugins-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 20px;
+                margin-top: 20px;
+            }
+            .ezs-plugin-card {
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 20px;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+            .ezs-plugin-card:hover {
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                transform: translateY(-2px);
+            }
+            .ezs-plugin-icon {
+                font-size: 48px;
+                margin-bottom: 15px;
+                display: block;
+            }
+            .ezs-plugin-name {
+                font-size: 18px;
+                font-weight: 600;
+                margin: 0 0 10px 0;
+                color: #23282d;
+            }
+            .ezs-plugin-description {
+                color: #555;
+                line-height: 1.6;
+                margin: 0 0 15px 0;
+                font-size: 14px;
+            }
+            .ezs-plugin-actions {
+                display: flex;
+                gap: 10px;
+                margin-top: 15px;
+            }
+            .ezs-plugin-status {
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: 600;
+                margin-bottom: 10px;
+            }
+            .ezs-plugin-status.active {
+                background: #d4edda;
+                color: #155724;
+            }
+            .ezs-plugin-status.inactive {
+                background: #fff3cd;
+                color: #856404;
+            }
+            .ezs-plugin-status.not-installed {
+                background: #f8d7da;
+                color: #721c24;
+            }
+            .ezs-plugin-link {
+                display: inline-block;
+                padding: 8px 16px;
+                background: #2271b1;
+                color: #fff !important;
+                text-decoration: none;
+                border-radius: 4px;
+                font-size: 13px;
+                transition: background 0.2s;
+            }
+            .ezs-plugin-link:hover {
+                background: #135e96;
+            }
+        </style>';
+
+        echo '<div class="ezs-plugins-grid">';
+
+        foreach ( $plugins as $plugin ) {
+            $status = $this->get_plugin_status( $plugin['slug'] );
+            
+            $status_labels = array(
+                'active'        => __( 'Ativo', 'easy-xml-sitemap' ),
+                'inactive'      => __( 'Instalado', 'easy-xml-sitemap' ),
+                'not-installed' => __( 'Não Instalado', 'easy-xml-sitemap' ),
+            );
+
+            echo '<div class="ezs-plugin-card">';
+            
+            if ( ! empty( $plugin['icon'] ) ) {
+                echo '<span class="ezs-plugin-icon">' . esc_html( $plugin['icon'] ) . '</span>';
+            }
+            
+            echo '<h3 class="ezs-plugin-name">' . esc_html( $plugin['name'] ) . '</h3>';
+            
+            echo '<span class="ezs-plugin-status ' . esc_attr( $status ) . '">' . 
+                 esc_html( $status_labels[ $status ] ) . 
+                 '</span>';
+            
+            echo '<p class="ezs-plugin-description">' . esc_html( $plugin['description'] ) . '</p>';
+            
+            echo '<div class="ezs-plugin-actions">';
+            echo '<a href="' . esc_url( $plugin['url'] ) . '" target="_blank" rel="noopener noreferrer" class="ezs-plugin-link">' . 
+                 esc_html__( 'Ver Detalhes', 'easy-xml-sitemap' ) . 
+                 '</a>';
+            echo '</div>';
+            
+            echo '</div>';
+        }
+
+        echo '</div>';
+
+        echo '<div style="margin-top:30px;padding:20px;background:#f0f0f1;border-radius:8px;text-align:center;">';
+        echo '<p style="margin:0 0 10px 0;font-size:14px;">' . 
+             esc_html__( 'Gostou dos meus plugins? Considere apoiar o desenvolvimento:', 'easy-xml-sitemap' ) . 
+             '</p>';
+        echo '<a href="https://ko-fi.com/andremouradev" target="_blank" rel="noopener noreferrer" class="button button-primary">' . 
+             esc_html__( '☕ Apoiar no Ko-fi', 'easy-xml-sitemap' ) . 
+             '</a>';
+        echo '</div>';
     }
 
     public function handle_regenerate() {
