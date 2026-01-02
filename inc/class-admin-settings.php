@@ -785,7 +785,7 @@ class Admin_Settings {
              esc_html__( 'Are you enjoying this plugin? Support its development:', 'easy-xml-sitemap' ) . 
              '</p>';
         echo '<a href="https://ko-fi.com/andremouradev" target="_blank" rel="noopener noreferrer" class="button button-primary">' . 
-             esc_html__( '☕ Apoiar no Ko-fi', 'easy-xml-sitemap' ) . 
+             esc_html__( '☕ Buy me a coffee', 'easy-xml-sitemap' ) . 
              '</a>';
         echo '</div>';
     }
